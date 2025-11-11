@@ -37,7 +37,8 @@ However, if the input at least contains columns named 'term_id' and 'p_value' th
 The output table is very similar to the one shown under the Manhattan plot.
 }
 \examples{
- gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+ # gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+ gostres <- readRDS(system.file("extdata", "gost_example_mmusculus.rds", package = "gprofiler2"))
  publish_gosttable(gostres, highlight_terms = c("GO:0001010", "REAC:R-MMU-8939245"))
 }
 \author{

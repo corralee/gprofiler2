@@ -5,7 +5,7 @@ knitr::opts_chunk$set(
 )
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  install.packages("gprofiler2")
+# install.packages("gprofiler2")
 
 ## ----setup--------------------------------------------------------------------
 library(gprofiler2)
@@ -41,8 +41,8 @@ gostres2 <- gost(query = c("X:1000:1000000", "rs17396340", "GO:0005005", "ENSG00
 head(gostres2$result, 3)
 
 ## ----eval = FALSE-------------------------------------------------------------
-#  gostres_link <- gost(query = c("X:1000:1000000", "rs17396340", "GO:0005005", "ENSG00000156103", "NLRP1"),
-#                  as_short_link = TRUE)
+# gostres_link <- gost(query = c("X:1000:1000000", "rs17396340", "GO:0005005", "ENSG00000156103", "NLRP1"),
+#                 as_short_link = TRUE)
 
 ## -----------------------------------------------------------------------------
 multi_gostres1 <- gost(query = list("chromX" = c("X:1000:1000000", "rs17396340", 
@@ -95,10 +95,10 @@ publish_gosttable(multi_gostres1,
 get_version_info(organism = "hsapiens")
 
 ## ----eval = F-----------------------------------------------------------------
-#  download.file(url = "http://software.broadinstitute.org/gsea/resources/msigdb/7.0/c2.cp.biocarta.v7.0.symbols.gmt", destfile = "extdata/biocarta.gmt")
+# download.file(url = "http://software.broadinstitute.org/gsea/resources/msigdb/7.0/c2.cp.biocarta.v7.0.symbols.gmt", destfile = "extdata/biocarta.gmt")
 
 ## ----eval = F-----------------------------------------------------------------
-#  upload_GMT_file(gmtfile = "extdata/biocarta.gmt")
+# upload_GMT_file(gmtfile = "extdata/biocarta.gmt")
 
 ## -----------------------------------------------------------------------------
 custom_gostres <- gost(query = c("MAPK3",	"PIK3C2G", "HRAS", "PIK3R1", "MAP2K1", 
@@ -119,33 +119,33 @@ gem <- gem[,c("GO.ID", "Description", "p.Val", "FDR", "Phenotype", "Genes")]
 head(gem, 3)
 
 ## ----eval=F-------------------------------------------------------------------
-#  write.table(gem, file = "extdata/gProfiler_gem.txt", sep = "\t", quote = F, row.names = F)
+# write.table(gem, file = "extdata/gProfiler_gem.txt", sep = "\t", quote = F, row.names = F)
 
 ## ----eval=F-------------------------------------------------------------------
-#  # enrichment for two input gene lists
-#  multi_gostres <- gost(query = list("chromX" = c("X:1000:1000000", "rs17396340",
-#                                                   "GO:0005005", "ENSG00000156103", "NLRP1"),
-#                               "chromY" = c("Y:1:10000000", "rs17396340",
-#                                            "GO:0005005", "ENSG00000156103", "NLRP1")),
-#                        evcodes = TRUE, multi_query = FALSE,
-#                        sources = c("GO", "REAC", "MIRNA", "CORUM", "HP", "HPA", "WP"))
-#  
-#  # format to GEM
-#  gem <- multi_gostres$result[,c("query", "term_id", "term_name", "p_value", "intersection")]
-#  colnames(gem) <- c("query", "GO.ID", "Description", "p.Val", "Genes")
-#  gem$FDR <- gem$p.Val
-#  gem$Phenotype = "+1"
-#  
-#  # write separate files for queries
-#  
-#  # install.packages("dplyr")
-#  library(dplyr)
-#  
-#  gem %>% group_by(query) %>%
-#    group_walk(~
-#      write.table(data.frame(.x[,c("GO.ID", "Description", "p.Val", "FDR", "Phenotype", "Genes")]),
-#                  file = paste0("gProfiler_", unique(.y$query), "_gem.txt"),
-#                  sep = "\t", quote = F, row.names = F))
+# # enrichment for two input gene lists
+# multi_gostres <- gost(query = list("chromX" = c("X:1000:1000000", "rs17396340",
+#                                                  "GO:0005005", "ENSG00000156103", "NLRP1"),
+#                              "chromY" = c("Y:1:10000000", "rs17396340",
+#                                           "GO:0005005", "ENSG00000156103", "NLRP1")),
+#                       evcodes = TRUE, multi_query = FALSE,
+#                       sources = c("GO", "REAC", "MIRNA", "CORUM", "HP", "HPA", "WP"))
+# 
+# # format to GEM
+# gem <- multi_gostres$result[,c("query", "term_id", "term_name", "p_value", "intersection")]
+# colnames(gem) <- c("query", "GO.ID", "Description", "p.Val", "Genes")
+# gem$FDR <- gem$p.Val
+# gem$Phenotype = "+1"
+# 
+# # write separate files for queries
+# 
+# # install.packages("dplyr")
+# library(dplyr)
+# 
+# gem %>% group_by(query) %>%
+#   group_walk(~
+#     write.table(data.frame(.x[,c("GO.ID", "Description", "p.Val", "FDR", "Phenotype", "Genes")]),
+#                 file = paste0("gProfiler_", unique(.y$query), "_gem.txt"),
+#                 sep = "\t", quote = F, row.names = F))
 
 ## -----------------------------------------------------------------------------
 gconvert(query = c("GO:0005030", "rs17396340", "NLRP1"), organism = "hsapiens", 

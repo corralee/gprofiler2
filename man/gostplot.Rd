@@ -30,7 +30,8 @@ This function creates a Manhattan plot out of the results from gprofiler2::gost(
 The plot is very similar to the one shown in the g:GOSt web tool.
 }
 \examples{
- gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+# gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+ gostres <- readRDS(system.file("extdata", "gost_example_mmusculus.rds", package = "gprofiler2"))
  gostplot(gostres)
 }
 \author{

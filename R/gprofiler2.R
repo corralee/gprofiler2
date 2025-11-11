@@ -17,8 +17,13 @@ gp_globals$CURL_SSLVERSION_TLSv1_1 <- 5L # <https://github.com/curl/curl/blob/ma
 gp_globals$CURL_SSLVERSION_TLSv1_2 <- 6L # <https://github.com/curl/curl/blob/master/include/curl/curl.h#L1926>
 
 gp_globals$rcurl_opts =
-  RCurl::curlOptions(useragent = paste("gprofiler2/", gp_globals$version, sep=""),
-                     sslversion = gp_globals$CURL_SSLVERSION_TLSv1_2)
+  RCurl::curlOptions(
+    useragent = paste("gprofiler2/", gp_globals$version, sep=""),
+    sslversion = gp_globals$CURL_SSLVERSION_TLSv1_2,
+    ssl.verifypeer = TRUE,
+    ssl.verifyhost = 2L
+  )
+
 gp_globals$base_url = "http://biit.cs.ut.ee/gprofiler"
 
 
@@ -97,20 +102,22 @@ gost <- function(query,
   
   if (!startsWith(organism, "gp__")){
     # get data_version
-    version_info = gprofiler2::get_version_info(organism = organism)
+    version_info <- tryCatch(
+      gprofiler2::get_version_info(organism = organism),
+      error = function(e) NULL
+    )
     
-    if(is.null(version_info) || ("try-error" %in% class(version_info))){
-      base_url = gprofiler2::get_base_url()
-      # get data version from archive
-      if(grepl("archive3", base_url, fixed=TRUE)){
-        data_version = basename(base_url)
+    if (is.null(version_info)) {
+      base_url <- gprofiler2::get_base_url()
+      if (grepl("archive3", base_url, fixed = TRUE)) {
+        data_version <- basename(base_url)
+      } else if (grepl("archive2", base_url, fixed = TRUE)) {
+        message("You're using a very old g:Profiler version. Some functionality may be unavailable.")
+      } else {
+        # stay with placeholder 'e1' and carry on; real queries may still work when service returns
       }
-      if(grepl("archive2", base_url, fixed=TRUE)){
-        message("You're trying to use very old version of g:Profiler. Not all functionality is available.")
-        #data_version = "e1" # set placeholder version
-      }
-    }else{
-      data_version = version_info$gprofiler_version
+    } else {
+      data_version <- version_info$gprofiler_version
     }
   }
   
@@ -367,7 +374,8 @@ gost <- function(query,
 #' @return The output is either a plotly object (if interactive = TRUE) or a ggplot object (if interactive = FALSE).
 #' @author Liis Kolberg <liis.kolberg@@ut.ee>
 #' @examples
-#'  gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+#' # gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+#'  gostres <- readRDS(system.file("extdata", "gost_example_mmusculus.rds", package = "gprofiler2"))
 #'  gostplot(gostres)
 #' @export
 #' @importFrom plotly %>%
@@ -586,7 +594,8 @@ mapViridis <- function(values, domain_min = 0, domain_max = 50, n = 256){
 #' @return The output is a ggplot object.
 #' @author Liis Kolberg <liis.kolberg@@ut.ee>
 #' @examples
-#'  gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+#'  # gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+#'  gostres <- readRDS(system.file("extdata", "gost_example_mmusculus.rds", package = "gprofiler2"))
 #'  p <- gostplot(gostres, interactive = FALSE)
 #'  publish_gostplot(p, highlight_terms = c("GO:0001010", "REAC:R-MMU-8939245"))
 #' @export
@@ -681,7 +690,8 @@ publish_gostplot <- function(p, highlight_terms = NULL, filename = NULL, width =
 #' @return The output is a ggplot object.
 #' @author Liis Kolberg <liis.kolberg@@ut.ee>
 #' @examples
-#'  gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+#'  # gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+#'  gostres <- readRDS(system.file("extdata", "gost_example_mmusculus.rds", package = "gprofiler2"))
 #'  publish_gosttable(gostres, highlight_terms = c("GO:0001010", "REAC:R-MMU-8939245"))
 #' @export
 publish_gosttable <- function(gostres, highlight_terms = NULL, use_colors = TRUE, show_columns = c("source", "term_name", "term_size", "intersection_size"), filename = NULL, ggplot = TRUE){
@@ -1401,6 +1411,13 @@ get_version_info <- function(organism = "hsapiens"){
 #'
 #' @export
 gprofiler_request <- function(url, payload){
+  
+  # Fail fast if no internet
+  if (!curl::has_internet()) {
+    stop("No internet connection detected. Please connect to the internet or try again later.",
+         call. = FALSE)
+  }
+  
   headers <- list("Accept" = "application/json",
                   "Content-Type" = "application/json",
                   "charset" = "UTF-8",
@@ -1415,33 +1432,57 @@ gprofiler_request <- function(url, payload){
     httpheader = headers,
     customrequest = 'POST',
     verbose = FALSE,
-    ssl.verifypeer = FALSE,
     writefunction = h1$update,
     curl = h2,
     .opts = gp_globals$rcurl_opts
   )
   
   options(warn = 0)
+  
+  # Handle network-level errors gracefully
+  if (inherits(r, "try-error")) {
+    stop(
+      paste0(
+        "Unable to reach g:Profiler at the moment.\n",
+        "This is likely a temporary server or network issue.\n",
+        "Please try again later or contact biit.support@ut.ee if it persists.\n\n",
+        "Details: ", conditionMessage(attr(r, "condition"))
+      ),
+      call. = FALSE
+    )
+  }
+  
   rescode <- RCurl::getCurlInfo(h2)[["response.code"]]
   txt <- h1$value()
   
   if (rescode != 200) {
-    error_message <- error_message <- paste0("There's an issue with your request to g:Profiler.", "\nError code: ", rescode, ".")
+    # Build a polite, informative message
+    base_msg <- paste0("Request to g:Profiler failed (HTTP ", rescode, ").")
     
-    # Try parsing JSON
-    tryCatch({
-      json <- jsonlite::fromJSON(txt)
-      if ("message" %in% names(json)) {
-        error_message <- paste0(error_message, " API message: ", json$message)
-      } else {
-        error_message <- paste0(error_message, " API message: ", txt)
-      }
-    }, error = function(e) {
-      # If parsing fails, include the entire text
-      error_message <- paste0(error_message, "\nAPI message: ", txt)
-    })
-    error_message <- paste0(error_message, "\nPlease double check your input. If this doesn't help, then check your internet connection or contact us with a reproducible example on biit.support@ut.ee")
-    stop(error_message)
+    # Distinguish between client and server errors
+    if (rescode >= 500) {
+      base_msg <- paste0(base_msg, " The service may be temporarily unavailable.")
+    } else if (rescode >= 400) {
+      base_msg <- paste0(base_msg, " Please check your input or organism argument.")
+    }
+    
+    # Try to parse API message
+    api_msg <- NULL
+    parsed <- try(jsonlite::fromJSON(txt), silent = TRUE)
+    if (!inherits(parsed, "try-error") && is.list(parsed) && "message" %in% names(parsed)) {
+      api_msg <- parsed$message
+    }
+    
+    if (!is.null(api_msg) && nzchar(api_msg)) {
+      base_msg <- paste0(base_msg, "\nAPI message: ", api_msg)
+    }
+    
+    base_msg <- paste0(
+      base_msg,
+      "\nIf the issue persists, please contact biit.support@ut.ee with a reproducible example."
+    )
+    
+    stop(base_msg, call. = FALSE)
   }
   
   res <- jsonlite::fromJSON(txt)

@@ -308,11 +308,11 @@ Available data sources and their abbreviations are:
 * [KEGG](https://www.genome.jp/kegg/) (KEGG)
 * [Reactome](https://reactome.org/) (REAC)
 * [WikiPathways](https://www.wikipathways.org/index.php/WikiPathways) (WP)
-* [TRANSFAC](https://genexplain.com/transfac/) (TF)
-* [miRTarBase](https://mirtarbase.cuhk.edu.cn/~miRTarBase/miRTarBase_2019/php/index.php) (MIRNA)
+* [TRANSFAC](https://genexplain.com/transfac-product/) (TF)
+* miRTarBase (MIRNA)
 * [Human Protein Atlas](https://www.proteinatlas.org/) (HPA)
 * CORUM (CORUM)
-* [Human phenotype ontology](http://hpo.jax.org/app/) (HP)
+* [Human phenotype ontology](https://hpo.jax.org/) (HP)
 
 The function `get_version_info` enables to obtain the full metadata about the versions of different data sources for a given `organism`. 
 

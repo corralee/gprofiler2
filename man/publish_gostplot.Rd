@@ -32,7 +32,8 @@ The resulting plot is saved to a publication ready image if 'filename' is specif
 The plot is very similar to the one shown in the g:GOSt web tool after clicking on circles.
 }
 \examples{
- gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+ # gostres <- gost(c("Klf4", "Pax5", "Sox2", "Nanog"), organism = "mmusculus")
+ gostres <- readRDS(system.file("extdata", "gost_example_mmusculus.rds", package = "gprofiler2"))
  p <- gostplot(gostres, interactive = FALSE)
  publish_gostplot(p, highlight_terms = c("GO:0001010", "REAC:R-MMU-8939245"))
 }
