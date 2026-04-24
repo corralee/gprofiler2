@@ -1484,7 +1484,7 @@ gprofiler_request <- function(url, payload){
     
     stop(base_msg, call. = FALSE)
   }
-  
+  txt <- gsub("(?<!\")\\bNaN\\b(?!\")", "null", txt, perl = TRUE)
   res <- jsonlite::fromJSON(txt)
   return(res)
 }
